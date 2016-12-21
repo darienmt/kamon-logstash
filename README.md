@@ -1,0 +1,2 @@
+# Kamon-logstash backend module
+

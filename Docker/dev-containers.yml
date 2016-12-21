@@ -1,0 +1,10 @@
+version: '2'
+services:
+
+  grafana:
+      image: kamon/grafana_graphite:2.1
+      ports:
+        - "8088:80"
+        - "8089:81"
+        - "8225:8125/udp"
+        - "8225:8126"
