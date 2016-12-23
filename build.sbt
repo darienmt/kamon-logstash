@@ -28,9 +28,18 @@ lazy val akkaLib = Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion
 )
 
+lazy val logbackVersion = "1.1.6"
+lazy val jacksonVersion = "2.6.5"
+
 lazy val loggingLib = Seq(
-  "ch.qos.logback" % "logback-classic" % "1.1.3"
+  "ch.qos.logback" % "logback-core" % logbackVersion,
+  "ch.qos.logback" % "logback-classic" % logbackVersion,
+  "net.logstash.logback" % "logstash-logback-encoder" % "4.8",
+  "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
+  "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
+  "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion
 )
+
 
 lazy val kamonLibs = Seq(
   "io.kamon" %% "kamon-core",

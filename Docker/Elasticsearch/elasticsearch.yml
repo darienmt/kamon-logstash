@@ -1,0 +1,4 @@
+cluster.name: kamon-cluster
+network.host: 0.0.0.0
+discovery.zen.ping.unicast.hosts:
+  - elasticsearch-seed
