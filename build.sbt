@@ -49,6 +49,13 @@ lazy val kamonLibs = Seq(
   "io.kamon" %% "kamon-system-metrics"
 ).map(_ % "0.6.3")
 
+lazy val circeLib = Seq(
+  "io.circe" %% "circe-core",
+  "io.circe" %% "circe-generic",
+  "io.circe" %% "circe-parser",
+  "io.circe" %% "circe-java8"
+).map(_ % "0.6.0")
+
 lazy val aspectJWeaverVersions = "1.8.9"
 lazy val aspectJWeaverLib = Seq(
   "org.aspectj" % "aspectjweaver" % aspectJWeaverVersions
@@ -82,7 +89,7 @@ lazy val actorsToMonitor = project.in(file("modules/actors-to-monitor"))
 
 lazy val kamonLogstash = project.in(file("modules/kamon-logstash"))
   .settings(commonSettings:_*)
-  .settings(libraryDependencies ++= akkaLib ++ loggingLib ++ kamonLibs)
+  .settings(libraryDependencies ++= akkaLib ++ loggingLib ++ kamonLibs ++ circeLib)
 
 // Docker
 addCommandAlias("dockerize", ";clean;compile;test;actorsToMonitor/docker")
