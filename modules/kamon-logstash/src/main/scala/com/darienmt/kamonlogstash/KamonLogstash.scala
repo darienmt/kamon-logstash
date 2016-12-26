@@ -20,11 +20,13 @@ class KamonLogstashExtension(system: ExtendedActorSystem) extends Kamon.Extensio
 
   private val metricsExtension = Kamon.metrics
 
-  private val shipper = system.actorOf(MetricShipper.props(), "metric-shipper")
-  private val logger = system.actorOf(MetricLogger.props(shipper), "subscription-logger")
-
   private val config = system.settings.config
   private val logstashConfig = config.getConfig("kamon.logstash")
+
+  private val lsAddress = logstashConfig.getString("address")
+  private val lsPort = logstashConfig.getInt("port")
+  private val shipper = system.actorOf(MetricShipper.props(lsAddress, lsPort), "metric-shipper")
+  private val logger = system.actorOf(MetricLogger.props(shipper), "subscription-logger")
 
   private val subscriptions: Config = logstashConfig.getConfig("subscriptions")
 

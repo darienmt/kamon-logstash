@@ -1,0 +1,36 @@
+{
+  "kamon-metric" : {
+    "order": 0,
+    "version": 1,
+    "template": "metrics-*",
+    "settings": {
+      "index": {
+        "refresh_interval": "5s"
+      }
+    },
+    "mappings": {
+      "metric": {
+        "_source": {
+          "enabled": true
+        },
+        "properties": {
+          "from": { "type": "date" },
+          "to": { "type": "date" },
+          "entity": { "type": "text" },
+          "tags": {
+            "properties": {
+              "name": { "type": "text" },
+              "value": { "type": "text" }
+            }
+          }
+          "category": { "type": "text" }
+          "keyName": { "type": "keyword"},
+          "records": {
+            "value": "long",
+            "occurrence": "long"
+          }
+        }
+      }
+    }
+  }
+}

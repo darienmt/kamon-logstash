@@ -30,11 +30,17 @@ services:
       - elasticsearch-seed
 
 
-  logstash:
-      build: ./Logstash
-      image: logstash-kamon
+  logstash-log:
+      build: ./Logstash-Log
+      image: logstash-log
       ports:
         - "4560:4560"
+
+  logstash-metric:
+      build: ./Logstash-Metric
+      image: logstash-metric
+      ports:
+        - "4570:4560"
 
 volumes:
   es-data:

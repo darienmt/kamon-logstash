@@ -1,0 +1,16 @@
+input {
+    tcp {
+        port => 4560
+        codec => json_lines
+    }
+}
+
+output {
+    elasticsearch {
+        hosts => [ "http://elasticsearch-seed:9200" ]
+        document_type => "metric"
+        retry_on_conflict => "3"
+        index => "metrics-%{+YYYY.MM.dd}"
+        template => "/usr/share/logstash/pipeline/metric-template.json"
+    }
+}

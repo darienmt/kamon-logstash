@@ -1,38 +1,27 @@
 package com.darienmt.kamonlogstash
 
-import java.time.{ Instant, ZonedDateTime }
+import java.time.{Instant, ZonedDateTime}
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
-import com.darienmt.kamonlogstash.MetricLogger.{ CounterMetric, HistogramMetric, Metric, Record }
-import kamon.metric.{ Entity, EntitySnapshot, MetricKey }
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import com.darienmt.kamonlogstash.MetricLogger.{Metric, Record, Tag}
+import kamon.metric.Entity
 import kamon.metric.SubscriptionsDispatcher.TickMetricSnapshot
-import kamon.metric.instrument.{ Counter, Histogram, InstrumentSnapshot }
+import kamon.metric.instrument.{Counter, Histogram}
 import kamon.util.MilliTimestamp
 
 object MetricLogger {
 
-  sealed trait Metric {
-    val from: ZonedDateTime
-    val to: ZonedDateTime
-    val entity: Entity
-    val keyName: String
-  }
-  case class HistogramMetric(
+  case class Metric(
     from: ZonedDateTime,
     to: ZonedDateTime,
-    entity: Entity,
+    entity: String,
+    category: String,
+    tags: List[Tag],
     keyName: String,
     records: List[Record]
-  ) extends Metric
+  )
 
-  case class CounterMetric(
-    from: ZonedDateTime,
-    to: ZonedDateTime,
-    entity: Entity,
-    keyName: String,
-    value: Long
-  ) extends Metric
-
+  case class Tag(name: String, value: String)
   case class Record(value: Long, occurrence: Long)
 
   def props(shipper: ActorRef): Props = Props(new MetricLogger(shipper))
@@ -54,11 +43,7 @@ class MetricLogger(shipper: ActorRef) extends Actor with ActorLogging {
   import Conversions._
 
   def receive: Receive = {
-    case tick: TickMetricSnapshot => shipper ! translate(tick)
-      .filter {
-        case h: HistogramMetric => h.records.nonEmpty
-        case _ => true
-      }
+    case tick: TickMetricSnapshot => shipper ! translate(tick).filter(_.records.nonEmpty)
   }
 
   def translate(tick: TickMetricSnapshot): Iterable[Metric] =
@@ -66,19 +51,23 @@ class MetricLogger(shipper: ActorRef) extends Actor with ActorLogging {
       (entity, snapshot) <- tick.metrics
       (metricKey, metric) <- snapshot.metrics
     } yield metric match {
-      case h: Histogram.Snapshot => HistogramMetric(
+      case h: Histogram.Snapshot => Metric (
         from = tick.from,
         to = tick.to,
-        entity = entity,
+        entity = entity.name,
+        category = entity.category,
+        tags = entity.tags.map( kv => Tag(kv._1, kv._2)).toList,
         keyName = metricKey.name,
         records = h.recordsIterator.map(r => Record(r.level, r.count)).toList
       )
-      case c: Counter.Snapshot => CounterMetric(
+      case c: Counter.Snapshot => Metric(
         from = tick.from,
         to = tick.to,
-        entity = entity,
+        entity = entity.name,
+        category = entity.category,
+        tags = entity.tags.map( kv => Tag(kv._1, kv._2)).toList,
         keyName = metricKey.name,
-        value = c.count
+        records = List(Record(c.count,1))
       )
     }
 }
