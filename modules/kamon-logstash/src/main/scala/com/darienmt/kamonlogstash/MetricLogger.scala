@@ -4,7 +4,6 @@ import java.time.{Instant, ZonedDateTime}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.darienmt.kamonlogstash.MetricLogger.{Metric, Record, Tag}
-import kamon.metric.Entity
 import kamon.metric.SubscriptionsDispatcher.TickMetricSnapshot
 import kamon.metric.instrument.{Counter, Histogram}
 import kamon.util.MilliTimestamp
@@ -12,6 +11,8 @@ import kamon.util.MilliTimestamp
 object MetricLogger {
 
   case class Metric(
+    appName: String,
+    hostName: String,
     from: ZonedDateTime,
     to: ZonedDateTime,
     entity: String,
@@ -24,7 +25,7 @@ object MetricLogger {
   case class Tag(name: String, value: String)
   case class Record(value: Long, occurrence: Long)
 
-  def props(shipper: ActorRef): Props = Props(new MetricLogger(shipper))
+  def props(appName: String, hostName: String, shipper: ActorRef): Props = Props(new MetricLogger(appName, hostName, shipper))
 }
 
 object Conversions {
@@ -38,7 +39,7 @@ object Conversions {
 
 }
 
-class MetricLogger(shipper: ActorRef) extends Actor with ActorLogging {
+class MetricLogger(appName: String, hostName: String, shipper: ActorRef) extends Actor with ActorLogging {
 
   import Conversions._
 
@@ -52,6 +53,8 @@ class MetricLogger(shipper: ActorRef) extends Actor with ActorLogging {
       (metricKey, metric) <- snapshot.metrics
     } yield metric match {
       case h: Histogram.Snapshot => Metric (
+        appName = appName,
+        hostName = hostName,
         from = tick.from,
         to = tick.to,
         entity = entity.name,
@@ -61,6 +64,8 @@ class MetricLogger(shipper: ActorRef) extends Actor with ActorLogging {
         records = h.recordsIterator.map(r => Record(r.level, r.count)).toList
       )
       case c: Counter.Snapshot => Metric(
+        appName = appName,
+        hostName = hostName,
         from = tick.from,
         to = tick.to,
         entity = entity.name,

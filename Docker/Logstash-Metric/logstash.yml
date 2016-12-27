@@ -11,6 +11,7 @@ output {
         document_type => "metric"
         retry_on_conflict => "3"
         index => "metrics-%{+YYYY.MM.dd}"
-        template => "/usr/share/logstash/pipeline/metric-template.json"
+        template => "/usr/share/logstash/metric-template.json"
+        template_name => "kamon-metric"
     }
 }

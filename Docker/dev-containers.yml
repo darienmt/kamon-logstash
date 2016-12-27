@@ -35,12 +35,16 @@ services:
       image: logstash-log
       ports:
         - "4560:4560"
+      depends_on:
+        - elasticsearch-seed
 
   logstash-metric:
       build: ./Logstash-Metric
       image: logstash-metric
       ports:
         - "4570:4560"
+      depends_on:
+        - elasticsearch-seed
 
 volumes:
   es-data:

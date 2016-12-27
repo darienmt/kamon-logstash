@@ -37,19 +37,26 @@ class LogstashClient(remote: InetSocketAddress, manager: ActorRef) extends Actor
       manager ! LogstashClient.Connected
       val connection = sender()
       connection ! Register(self)
-      context become {
-        case data: ByteString =>
-          connection ! Write(data)
-        case CommandFailed(w: Write) =>
-          // O/S buffer was full
-          manager ! WriteFailed
-        case Received(data) =>
-          manager ! data
-        case CloseConnection =>
-          connection ! Close
-        case _: ConnectionClosed =>
-          manager ! ConnectionClosed
-          context stop self
-      }
+      context watch connection
+      context become receiveOnConnected(connection)
+  }
+
+  def receiveOnConnected(connection: ActorRef): Receive = {
+    case data: ByteString =>
+      connection ! Write(data)
+
+    case CommandFailed(w: Write) =>
+      // O/S buffer was full
+      manager ! WriteFailed
+
+    case Received(data) =>
+      manager ! data
+
+    case CloseConnection =>
+      connection ! Close
+
+    case _: ConnectionClosed =>
+      manager ! ConnectionClosed
+      context stop self
   }
 }
