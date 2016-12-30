@@ -4,7 +4,7 @@ import java.net.InetSocketAddress
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
-import akka.actor.{Actor, ActorLogging, Props, Stash}
+import akka.actor.{Actor, ActorKilledException, ActorLogging, ActorRef, OneForOneStrategy, Props, Stash, SupervisorStrategy, Terminated}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import akka.util.ByteString
 import com.darienmt.kamonlogstash.MetricShipper.ShipperConfig
@@ -34,38 +34,25 @@ class MetricShipper(config: ShipperConfig) extends Actor with ActorLogging with 
 
   protected final val LOG_SEPARATOR = "\r\n"
 
-  val supervisorProps = BackoffSupervisor.props(
-    Backoff.onFailure(
-      LogstashClient.props(new InetSocketAddress(config.address, config.port), self),
-      childName = "client",
-      minBackoff = config.minBackoff,
-      maxBackoff = config.maxBackoff,
-      randomFactor = config.randomFactor
-    )
-      .withAutoReset(config.retryAutoReset)
-  )
-
-  val logstashClient = context.actorOf(supervisorProps)
+  val watcher = context.actorOf(LogstashWatcher.props(self, config))
 
   implicit final val encodeZonedDatetime: Encoder[ZonedDateTime] = encodeZonedDateTime(ISO_OFFSET_DATE_TIME)
 
-  def receive: Receive = waitToConnect
+  def receive: Receive = waitForClient
 
-  def connected: Receive = {
-    case l: List[MetricLogger.Metric] => logstashClient ! ByteString(l.map(_.asJson.noSpaces).mkString(LOG_SEPARATOR) + LOG_SEPARATOR,"UTF-8")
-    case LogstashClient.ConnectionClosed => context become(waitToConnect, discardOld = true)
+  def connected(client: ActorRef): Receive = {
+    case l: List[MetricLogger.Metric] => client ! ByteString(l.map(_.asJson.noSpaces).mkString(LOG_SEPARATOR) + LOG_SEPARATOR,"UTF-8")
+    case LogstashWatcher.WaitForReconnection =>  context become(waitForClient, discardOld = true)
   }
 
-  def waitToConnect: Receive = {
-    case LogstashClient.Connected => {
+  def waitForClient: Receive = {
+    case LogstashWatcher.UseClient(client) => {
       unstashAll()
-      context become(connected, discardOld = true)
+      context become(connected(client), discardOld = true)
     }
     case l:List[MetricLogger.Metric] => stash()
-    case LogstashClient.ConnectionFailed => {
-      log.error(s"Connection to ${config.address}:${config.port} failed")
-      logstashClient ! BackoffSupervisor.GetRestartCount
-    }
-    case BackoffSupervisor.RestartCount(count) => log.error("Reconnection count " + count)
   }
+
+
+  override def preStart(): Unit = watcher ! LogstashWatcher.Connect
 }
