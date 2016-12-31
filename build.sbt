@@ -44,7 +44,6 @@ lazy val loggingLib = Seq(
 lazy val kamonLibs = Seq(
   "io.kamon" %% "kamon-core",
   "io.kamon" %% "kamon-akka",
-  "io.kamon" %% "kamon-statsd",
   "io.kamon" %% "kamon-log-reporter",
   "io.kamon" %% "kamon-system-metrics"
 ).map(_ % "0.6.3")

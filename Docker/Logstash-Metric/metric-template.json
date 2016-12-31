@@ -24,12 +24,19 @@
             "value": { "type": "text" }
           }
         },
-        "category": { "type": "text" },
+        "category": { "type": "keyword" },
+        "akkaData": {
+          "properties": {
+            "actorSystem": { "type": "keyword" },
+            "topParent": { "type": "keyword" },
+            "path": { "type": "text" }
+          }
+        },
         "keyName": { "type": "keyword" },
         "records": {
           "properties": {
-            "value": { "type": "text" },
-            "occurrence": { "type": "text" }
+            "value": { "type": "long" },
+            "occurrence": { "type": "long" }
           }
         }
       }
