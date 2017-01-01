@@ -1,11 +1,9 @@
 package com.darienmt.kamonlogstash
 
-import java.net.InetSocketAddress
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
-import akka.actor.{Actor, ActorKilledException, ActorLogging, ActorRef, OneForOneStrategy, Props, Stash, SupervisorStrategy, Terminated}
-import akka.pattern.{Backoff, BackoffSupervisor}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Stash}
 import akka.util.ByteString
 import com.darienmt.kamonlogstash.MetricShipper.ShipperConfig
 import io.circe._
@@ -34,7 +32,7 @@ class MetricShipper(config: ShipperConfig) extends Actor with ActorLogging with 
 
   protected final val LOG_SEPARATOR = "\r\n"
 
-  val watcher = context.actorOf(LogstashWatcher.props(self, config))
+  val watcher = context.actorOf(LogstashWatcher.props(self, config), "watcher")
 
   implicit final val encodeZonedDatetime: Encoder[ZonedDateTime] = encodeZonedDateTime(ISO_OFFSET_DATE_TIME)
 

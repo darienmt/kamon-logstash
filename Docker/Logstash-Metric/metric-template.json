@@ -33,12 +33,8 @@
           }
         },
         "keyName": { "type": "keyword" },
-        "records": {
-          "properties": {
-            "value": { "type": "long" },
-            "occurrence": { "type": "long" }
-          }
-        }
+        "unitLabel": { "type": "keyword" },
+        "value": { "type": "long" }
       }
     }
   }

@@ -3,9 +3,10 @@ package com.darienmt.kamonlogstash
 import java.time.{Instant, ZonedDateTime}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import com.darienmt.kamonlogstash.MetricLogger.{AkkaData, Metric, Record, Tag}
+import com.darienmt.kamonlogstash.MetricLogger.{AkkaData, Metric, Tag}
 import kamon.metric.SubscriptionsDispatcher.TickMetricSnapshot
-import kamon.metric.instrument.{Counter, Histogram}
+import kamon.metric.instrument.{Counter, Histogram, InstrumentSnapshot}
+import kamon.metric.{Entity, EntitySnapshot, MetricKey}
 import kamon.util.MilliTimestamp
 
 object MetricLogger {
@@ -20,13 +21,13 @@ object MetricLogger {
     akkaData: Option[AkkaData],
     tags: List[Tag],
     keyName: String,
-    records: List[Record]
+    unitLabel: String,
+    value: Long
   )
 
   case class AkkaData(actorSystem: String, topParent: String, path: String)
 
   case class Tag(name: String, value: String)
-  case class Record(value: Long, occurrence: Long)
 
   def props(appName: String, hostName: String, shipper: ActorRef): Props = Props(new MetricLogger(appName, hostName, shipper))
 }
@@ -47,35 +48,44 @@ class MetricLogger(appName: String, hostName: String, shipper: ActorRef) extends
   import Conversions._
 
   def receive: Receive = {
-    case tick: TickMetricSnapshot => shipper ! translate(tick).filter(_.records.nonEmpty)
+    case tick: TickMetricSnapshot => shipper ! translate(tick)
   }
 
   def translate(tick: TickMetricSnapshot): Iterable[Metric] =
     for {
-      (entity, snapshot) <- tick.metrics
-      (metricKey, metric) <- snapshot.metrics
-    } yield
-      Metric (
+      (entity, snapshot, akkaData) <- tick.metrics.map(parseEntity)
+      (metricKey, instrumentSnapshot) <- snapshot.metrics
+      metric <- getMetrics(tick, entity, akkaData, metricKey, instrumentSnapshot)
+    } yield metric
+
+
+  def getMetrics(tick: TickMetricSnapshot, entity: Entity, akkaData: Option[AkkaData], metricKey: MetricKey, instruments: InstrumentSnapshot): List[Metric] =
+    (instruments match {
+      case h: Histogram.Snapshot => h.recordsIterator.flatMap(r => (1 to r.count.toInt).map(_ => r.level)).toList
+      case c: Counter.Snapshot => List(c.count)
+    }).map( value => Metric (
         appName = appName,
         hostName = hostName,
         from = tick.from,
         to = tick.to,
         category = entity.category,
         entity = entity.name,
-        akkaData = parseEntity(entity.category, entity.name),
+        akkaData = akkaData,
         tags = entity.tags.map( kv => Tag(kv._1, kv._2)).toList,
         keyName = metricKey.name,
-        records = metric match {
-          case h: Histogram.Snapshot => h.recordsIterator.map(r => Record(r.level, r.count)).toList
-          case c: Counter.Snapshot => List(Record(c.count,1))
-        }
-      )
+        unitLabel = metricKey.unitOfMeasurement.label,
+        value = value
+      ))
 
-  def parseEntity(category: String, name: String):Option[AkkaData] =
-    if ( !category.startsWith("akka-") ) {
-      None
-    } else {
-      val actorSystem :: topParent :: rest = name.split("/").toList
-      Some(AkkaData(actorSystem, topParent, rest.mkString("/")))
-    }
+  def parseEntity(entitySnapshot: (Entity, EntitySnapshot)):(Entity, EntitySnapshot, Option[AkkaData]) = {
+    val (entity, snapShot) = entitySnapshot
+    val akkaData = if ( !entity.category.startsWith("akka-") ) {
+                    None
+                  } else {
+                    val actorSystem :: topParent :: rest = entity.name.split("/").toList
+                    Some(AkkaData(actorSystem, topParent, rest.mkString("/")))
+                  }
+    (entity, snapShot, akkaData)
+  }
+
 }
