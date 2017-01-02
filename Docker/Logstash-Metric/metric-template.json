@@ -29,7 +29,14 @@
           "properties": {
             "actorSystem": { "type": "keyword" },
             "topParent": { "type": "keyword" },
-            "path": { "type": "text" }
+            "path": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
+            }
           }
         },
         "keyName": { "type": "keyword" },

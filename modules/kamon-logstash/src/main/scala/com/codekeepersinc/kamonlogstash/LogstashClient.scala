@@ -1,11 +1,11 @@
-package com.darienmt.kamonlogstash
+package com.codekeepersinc.kamonlogstash
 
 import java.net.InetSocketAddress
 
-import akka.actor.{Actor, ActorRef, Props}
-import akka.io.{IO, Tcp}
+import akka.actor.{ Actor, ActorRef, Props }
+import akka.io.{ IO, Tcp }
 import akka.util.ByteString
-import com.darienmt.kamonlogstash.LogstashClient.CloseConnection
+import LogstashClient.CloseConnection
 
 object LogstashClient {
 

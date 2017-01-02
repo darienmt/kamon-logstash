@@ -2,7 +2,7 @@
 name := "kamon-logstash"
 
 lazy val buildSettings = Seq(
-  organization := "darienmt",
+  organization := "com.codekeepersinc",
   scalaVersion := "2.11.8"
 )
 
