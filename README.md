@@ -14,19 +14,23 @@ This repository contains:
 
 # Installation
 
-TBD
+To install this module, the first step is to add the following dependency to your `build.sbt`:
 
-# Configuration
+```
+libraryDependencies += "com.codekeepersinc" %% "kamonlogstash" % "0.0.1"
+```
 
-To install this module, the first step is to add the module's Akka extension on your configuration:
+The second step is to add the module's Akka extension on your configuration:
 
 ```
 akka {
+  ...
+  
   extensions = ["com.codekeepersinc.kamonlogstash.KamonLogstash"]
 }
 ```
 
-The reference configuration of the module can be seen on[reference.conf.](./modules/kamon-logstash/src/main/resources/reference.conf)
+The reference configuration of the module can be seen on [reference.conf.](./modules/kamon-logstash/src/main/resources/reference.conf)
 Here it is as well with comments to clarify the parameters:
 
 ```

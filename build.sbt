@@ -72,11 +72,13 @@ lazy val commonSettings = buildSettings ++ commonLibraries ++
 
 // Projects
 lazy val root = project.in(file("."))
+  .settings(noPublishSettings:_*)
   .aggregate(actorsToMonitor, kamonLogstash)
 
 lazy val actorsToMonitor = project.in(file("modules/actors-to-monitor"))
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= akkaLib ++ loggingLib ++ kamonLibs)
+  .settings(noPublishSettings:_*)
   .aggregate(kamonLogstash)
   .dependsOn(kamonLogstash)
   .enablePlugins(sbtdocker.DockerPlugin, JavaServerAppPackaging)
@@ -89,6 +91,7 @@ lazy val actorsToMonitor = project.in(file("modules/actors-to-monitor"))
 lazy val kamonLogstash = project.in(file("modules/kamon-logstash"))
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= akkaLib ++ loggingLib ++ kamonLibs ++ circeLib)
+  .settings(publishingSettings:_*)
 
 // Docker
 addCommandAlias("dockerize", ";clean;compile;test;actorsToMonitor/docker")
@@ -114,4 +117,43 @@ lazy val dockerSettings = Seq(
       tag = Some("v" + version.value)
     )
   )
+)
+
+// Publishing
+lazy val publishingSettings = Seq(
+  crossPaths := true,
+  pomExtra := (
+    <url>https://github.com/darienmt/kamon-logstash</url>
+      <licenses>
+        <license>
+          <name>Apache 2</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+      <scm>
+        <url>git://github.com/darienmt/kamon-logstash.git</url>
+        <connection>scm:git:git@github.com:darienmt/kamon-logstash.git</connection>
+      </scm>
+      <developers>
+        <developer><id>darienmt</id><name>Darien Martinez Torres</name><url>http://darienmt.com</url></developer>
+      </developers>
+    ),
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value) {
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    } else {
+      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    }
+  },
+  organization := "com.codekeepersinc",
+  pomIncludeRepository := { _ => false },
+  publishMavenStyle := true,
+  publishArtifact in Test := false
+)
+
+lazy val noPublishSettings = Seq(
+  publish := (),
+  publishLocal := (),
+  publishArtifact := false
 )
