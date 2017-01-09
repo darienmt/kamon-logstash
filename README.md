@@ -1,4 +1,6 @@
 # Kamon-logstash backend module
+[![Build status](https://img.shields.io/travis/darienmt/kamon-logstash/master.svg)](https://travis-ci.org/darienmt/kamon-logstash)
+[![Maven Central](https://img.shields.io/maven-central/v/com.codekeepersinc/kamonlogstash_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/com.codekeepersinc/kamonlogstash_2.11)
 
 [Kamon](http://kamon.io/) is a very useful monitoring tool for JVM. 
 It provides a few backend options. 
@@ -41,20 +43,30 @@ kamon {
     port = 4570                             # Logstash port
  
     appname = application                   # Application name
-    appname = ${?APPLICATION_NAME}          # It could be overwriten with the APPLICATION_NAME enviroment variable.
+    appname = ${?APPLICATION_NAME}          # It could be overwriten with the APPLICATION_NAME 
+                                            # enviroment variable.
 
     hostname = localhost                    # Hostname to use on the data.
-    hostname = ${?HOSTNAME}                 # It could be overwritten with the HOSTNAME environment variable
+    hostname = ${?HOSTNAME}                 # It could be overwritten with the HOSTNAME 
+                                            # environment variable
 
-    retry {                                 # Failures are unavoidable and Logstash could not be there when we call. This section controls the retry policy.
+    retry {                                 # Failures are unavoidable and Logstash could not be there 
+                                            # when we call. This section controls the retry policy.
+                                            
       minBackoff = 1 second                 # Minimum time to wait before retrying to connect.
+      
       maxBackoff = 10 seconds               # Maximum time to wait before retrying to connect.
-      randomFactor = 0.2                    # Random factor added to make it less predictable and give Logstash time it is overwhelmed.
-      retryAutoReset = 3 seconds            # Time to consider the system "healthy" and reset the internal retry counter.
+      
+      randomFactor = 0.2                    # Random factor added to make it less predictable and give 
+                                            # Logstash time it is overwhelmed.
+                                            
+      retryAutoReset = 3 seconds            # Time to consider the system "healthy" and reset the internal 
+                                            # retry counter.
     }
 
-    # Subscription patterns used to select which metrics will be pushed to Logstash. Note that first, metrics
-    # collection for your desired entities must be activated under the kamon.metrics.filters settings.
+    # Subscription patterns used to select which metrics will be pushed to Logstash. Note that first, 
+    # metrics collection for your desired entities must be activated under the kamon.metrics.filters 
+    # settings.
     subscriptions {
       histogram = ["**"]
       min-max-counter = ["**"]
