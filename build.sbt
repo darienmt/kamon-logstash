@@ -3,7 +3,7 @@ name := "kamon-logstash"
 
 lazy val buildSettings = Seq(
   organization := "com.codekeepersinc",
-  scalaVersion := "2.11.8"
+  scalaVersion := "2.12.4"
 )
 
 lazy val compilerOptions = Seq(
@@ -43,10 +43,10 @@ lazy val loggingLib = Seq(
 
 lazy val kamonLibs = Seq(
   "io.kamon" %% "kamon-core",
-  "io.kamon" %% "kamon-akka",
+  "io.kamon" %% "kamon-akka-2.4",
   "io.kamon" %% "kamon-log-reporter",
   "io.kamon" %% "kamon-system-metrics"
-).map(_ % "0.6.3")
+).map(_ % "0.6.7")
 
 lazy val circeLib = Seq(
   "io.circe" %% "circe-core",
